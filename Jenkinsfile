@@ -4,6 +4,9 @@ pipeline {
             image 'maven:3.8.8-eclipse-temurin-17-alpine'
         }
     } 
+    environment {
+        JBOSS_CREDENTIALS = credentials('jboss-credentials')
+    }
     stages {
         stage('Build') {                       
             steps {
@@ -88,10 +91,10 @@ pipeline {
                         sh 'env | sort'
 
                         // ---  community.general.jboss
-                        // sh 'pip install --upgrade ansible'
-                        // sh 'ansible --version'
-                        // sh 'ansible-galaxy --version'
-                        // sh 'ansible-galaxy collection install community.general'
+                        sh 'pip install --upgrade ansible'
+                        sh 'ansible --version'
+                        sh 'ansible-galaxy --version'
+                        sh 'ansible-galaxy collection install community.general'
                         // ---
                        
                         sh 'ansible-playbook -i hosts deploy_jboss.yml'
