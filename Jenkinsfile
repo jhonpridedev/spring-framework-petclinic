@@ -42,38 +42,38 @@ pipeline {
         //         }      
         //     }
         // }        
-        stage('Artifactory') {
-            steps {
-                script {
-                    sh 'env | sort'
+        // stage('Artifactory') {
+        //     steps {
+        //         script {
+        //             sh 'env | sort'
 
-                    def pom = readMavenPom file: 'pom.xml'
-                    println pom
+        //             def pom = readMavenPom file: 'pom.xml'
+        //             println pom
 
-                    def server = Artifactory.server 'artifactory'
-                    def repository = pom.artifactId
+        //             def server = Artifactory.server 'artifactory'
+        //             def repository = pom.artifactId
 
-                    if("${GIT_BRANCH}" == 'origin/master'){
-                        repository = repository + '-release'
-                    } else {
-                        repository = repository + '-snapshot'
-                    }
+        //             if("${GIT_BRANCH}" == 'origin/master'){
+        //                 repository = repository + '-release'
+        //             } else {
+        //                 repository = repository + '-snapshot'
+        //             }
 
-                    def uploadSpec = """
-                        {
-                            "files": [
-                                {
-                                    "pattern": "target/.*.war",
-                                    "target": "${repository}/${pom.groupId}/${pom.artifactId}/${pom.version}/",
-                                    "regexp": "true"
-                                }
-                            ]
-                        }
-                    """
-                    server.upload spec: uploadSpec
-                }
-            }
-        }
+        //             def uploadSpec = """
+        //                 {
+        //                     "files": [
+        //                         {
+        //                             "pattern": "target/.*.war",
+        //                             "target": "${repository}/${pom.groupId}/${pom.artifactId}/${pom.version}/",
+        //                             "regexp": "true"
+        //                         }
+        //                     ]
+        //                 }
+        //             """
+        //             server.upload spec: uploadSpec
+        //         }
+        //     }
+        // }
         stage('Deploy with jboss-cli.sh') {
             agent any
             steps {
