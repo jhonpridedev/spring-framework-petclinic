@@ -1,25 +1,18 @@
 pipeline {
     agent none
+    tools {
+        maven 'maven3.8.5'
+    }
     environment {
         JBOSS_CREDENTIALS = credentials('jboss-credentials')
     }
     stages {
-        stage('Build') {      
-            agent {
-                docker {
-                    image 'maven:3.8.8-eclipse-temurin-17-alpine'
-                }
-            }                  
+        stage('Build') {                      
             steps {
                 sh 'mvn clean package -B -ntp -DskipTests'
             }
         }
         stage('Testing') {
-            agent {
-                docker {
-                    image 'maven:3.8.8-eclipse-temurin-17-alpine'
-                }
-            }   
             steps {
                 sh 'mvn test -B -ntp'
             }
@@ -34,11 +27,6 @@ pipeline {
             }
         }
         stage('Sonarqube') {
-            agent {
-                docker {
-                    image 'maven:3.8.8-eclipse-temurin-17-alpine'
-                }
-            }  
             steps {
                 withSonarQubeEnv('sonarqube'){                    
                     sh 'mvn sonar:sonar -B -ntp'
