@@ -39,20 +39,38 @@ pipeline {
                 }      
             }
         }        
-        // stage("Artifactory"){
-            // steps{
-            //     script {
-                    
-            //         def pom = readMavenPom file: 'pom.xml'
-            //         def app = docker.build("jhonpridedev/${pom.artifactId}:${pom.version}")
+        stage('Artifactory') {
+            steps {
+                script {
+                    sh 'env | sort'
 
-            //         docker.withRegistry('https://registry.hub.docker.com/', 'dockerhub-credentials') {
-            //             app.push()
-            //             app.push('latest')
-            //         }                                        
-            //     }            
-            // }
-        // }
+                    def pom = readMavenPom file: 'pom.xml'
+                    println pom
+
+                    def server = Artifactory.server 'artifactory'
+                    def repository = 'spring-framework-petclinic'
+
+                    if("${GIT_BRANCH}" == 'origin/master'){
+                        repository = repository + '-release'
+                    } else {
+                        repository = repository + '-snapshot'
+                    }
+
+                    def uploadSpec = """
+                        {
+                            "files": [
+                                {
+                                    "pattern": "target/.*.jar",
+                                    "target": "${repository}/${pom.groupId}/${pom.artifactId}/${pom.version}/",
+                                    "regexp": "true"
+                                }
+                            ]
+                        }
+                    """
+                    server.upload spec: uploadSpec
+                }
+            }
+        }
         // stage("Deploy"){
             // steps{
             //     script {       
