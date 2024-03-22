@@ -39,7 +39,7 @@ pipeline {
                 }      
             }
         }        
-        stage("Artifactory"){
+        // stage("Artifactory"){
             // steps{
             //     script {
                     
@@ -52,8 +52,8 @@ pipeline {
             //         }                                        
             //     }            
             // }
-        }
-        stage("Deploy"){
+        // }
+        // stage("Deploy"){
             // steps{
             //     script {       
 
@@ -63,7 +63,7 @@ pipeline {
 
             //     }
             // }
-        }
+        // }
     }
     post {
         success {
