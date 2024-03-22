@@ -6,8 +6,7 @@
   tasks:
   - name: Copy war
     ansible.builtin.copy:
-      # src: "{{ lookup('ansible.builtin.env', 'WORKSPACE') }}/target/petclinic.war"
-      src: "/var/lib/jenkins/workspace/spring-framework-petclinic/target/petclinic.war"
+      src: "{{ lookup('ansible.builtin.env', 'WORKSPACE') }}/target/petclinic.war"      
       dest: /home/admin
 
   # - name: Deploy war with jboss-cli.sh
