@@ -48,7 +48,7 @@ pipeline {
                     println pom
 
                     def server = Artifactory.server 'artifactory'
-                    def repository = 'spring-framework-petclinic'
+                    def repository = pom.artifactId
 
                     if("${GIT_BRANCH}" == 'origin/master'){
                         repository = repository + '-release'
@@ -71,17 +71,34 @@ pipeline {
                 }
             }
         }
-        // stage("Deploy"){
-            // steps{
-            //     script {       
+        stage('Deploy with Ansible + Jboss') {
+            agent {
+                docker {
+                    image 'quay.io/ansible/ansible-runner:stable-2.12-latest'
+                    args '-u root'
+                }
+            }
+            environment {
+                ANSIBLE_HOST_KEY_CHECKING = "False"
+            }
+            options { skipDefaultCheckout() }
+            steps {
+                dir('ansible'){
+                    sshagent (credentials: ['debian-private-key']){
+                        sh 'env | sort'
 
-            //         def pom = readMavenPom file: 'pom.xml'
-            //         sh "docker rm -f ${pom.artifactId}";
-            //         sh "docker run -d --name ${pom.artifactId} -p 9966:9966 jhonpridedev/${pom.artifactId}:${pom.version}"
-
-            //     }
-            // }
-        // }
+                        // ---  community.general.jboss
+                        sh 'pip install --upgrade ansible'
+                        sh 'ansible --version'
+                        sh 'ansible-galaxy --version'
+                        sh 'ansible-galaxy collection install community.general'
+                        // ---
+                       
+                        sh 'ansible-playbook -i hosts deploy_jboss.yml'
+                    }
+                }
+            }
+        }
     }
     post {
         success {
