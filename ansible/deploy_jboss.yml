@@ -9,17 +9,17 @@
       src: "{{ lookup('ansible.builtin.env', 'WORKSPACE') }}/target/petclinic.war"
       dest: /home/admin
 
-  # - name: Deploy war with jboss-cli.sh
-  #   ansible.builtin.shell: |
-  #     /home/admin/jboss-eap-7.4/bin/jboss-cli.sh -c --command="undeploy petclinic.war"
-  #     /home/admin/jboss-eap-7.4/bin/jboss-cli.sh -c --command="deploy /home/admin/petclinic.war"
+  - name: Deploy war with jboss-cli.sh
+    ansible.builtin.shell: |
+      /home/admin/jboss-eap-7.4/bin/jboss-cli.sh -c --command="undeploy petclinic.war"
+      /home/admin/jboss-eap-7.4/bin/jboss-cli.sh -c --command="deploy /home/admin/petclinic.war"
 
-  - name: Deploy war
-    community.general.jboss:
-      src: /home/admin/petclinic.war
-      deploy_path: /home/admin/jboss-eap-7.4/standalone/deployments
-      deployment: petclinic.war
-      state: present
+  # - name: Deploy war
+  #   community.general.jboss:
+  #     src: /home/admin/petclinic.war
+  #     deploy_path: /home/admin/jboss-eap-7.4/standalone/deployments
+  #     deployment: petclinic.war
+  #     state: present
 
   - name: Remove war
     ansible.builtin.file:
