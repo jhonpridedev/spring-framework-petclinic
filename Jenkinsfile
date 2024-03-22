@@ -14,113 +14,105 @@ pipeline {
                 sh 'mvn clean package -B -ntp -DskipTests'
             }
         }
-        // stage('Testing') {
-        //     steps {
-        //         sh 'mvn test -B -ntp'
-        //     }
-        //     post {                
-        //         success {
-        //             jacoco()
-        //             junit 'target/surefire-reports/*.xml'
-        //         }                
-        //         failure {
-        //             echo 'Ha ocurrido un error TEST'
-        //         }
-        //     }
-        // }
-        // stage('Sonarqube') {
-        //     steps {
-        //         withSonarQubeEnv('sonarqube'){                    
-        //             sh 'mvn sonar:sonar -B -ntp'
-        //         }              
-        //     }
-        // }
-        // stage('Quality Gate') {
-        //     steps {
-        //         // Quality Gate
-        //         timeout(time: 1, unit: 'HOURS'){
-        //             waitForQualityGate abortPipeline: true
-        //         }      
-        //     }
-        // }        
-        // stage('Artifactory') {
-        //     steps {
-        //         script {
-        //             sh 'env | sort'
-
-        //             def pom = readMavenPom file: 'pom.xml'
-        //             println pom
-
-        //             def server = Artifactory.server 'artifactory'
-        //             def repository = pom.artifactId
-
-        //             if("${GIT_BRANCH}" == 'origin/master'){
-        //                 repository = repository + '-release'
-        //             } else {
-        //                 repository = repository + '-snapshot'
-        //             }
-
-        //             def uploadSpec = """
-        //                 {
-        //                     "files": [
-        //                         {
-        //                             "pattern": "target/.*.war",
-        //                             "target": "${repository}/${pom.groupId}/${pom.artifactId}/${pom.version}/",
-        //                             "regexp": "true"
-        //                         }
-        //                     ]
-        //                 }
-        //             """
-        //             server.upload spec: uploadSpec
-        //         }
-        //     }
-        // }
-        stage('Deploy with jboss-cli.sh') {
-            agent any
+        stage('Testing') {
+            agent {
+                docker {
+                    image 'maven:3.8.8-eclipse-temurin-17-alpine'
+                }
+            }   
             steps {
-                sshagent (credentials: ['debian-private-key']){
-                    sh '''
-                        pwd
-                        ls -la
-                        env | sort
-
-                        scp -o StrictHostKeyChecking=no target/petclinic.war admin@54.190.196.47:/home/admin
-                        #ssh admin@54.190.196.47 "~/jboss-eap-7.4/bin/jboss-cli.sh --user=$JBOSS_CREDENTIALS_USR --password=$JBOSS_CREDENTIALS_PSW -c --command='undeploy petclinic.war'"
-                        ssh admin@54.190.196.47 "~/jboss-eap-7.4/bin/jboss-cli.sh --user=$JBOSS_CREDENTIALS_USR --password=$JBOSS_CREDENTIALS_PSW -c --command='deploy /home/admin/petclinic.war'"
-                        ssh admin@54.190.196.47 'rm -f /home/admin/petclinic.war'
-                    '''
+                sh 'mvn test -B -ntp'
+            }
+            post {                
+                success {
+                    jacoco()
+                    junit 'target/surefire-reports/*.xml'
+                }                
+                failure {
+                    echo 'Ha ocurrido un error TEST'
                 }
             }
         }
+        stage('Sonarqube') {
+            agent {
+                docker {
+                    image 'maven:3.8.8-eclipse-temurin-17-alpine'
+                }
+            }  
+            steps {
+                withSonarQubeEnv('sonarqube'){                    
+                    sh 'mvn sonar:sonar -B -ntp'
+                }              
+            }
+        }
+        stage('Quality Gate') {
+            steps {
+                // Quality Gate
+                timeout(time: 1, unit: 'HOURS'){
+                    waitForQualityGate abortPipeline: true
+                }      
+            }
+        }        
+        stage('Artifactory') {
+            steps {
+                script {
+                    sh 'env | sort'
 
-        // stage('Deploy with Ansible') {
-        //     agent {
-        //         docker {
-        //             image 'quay.io/ansible/ansible-runner:stable-2.12-latest'
-        //             args '-u root'
-        //         }
-        //     }
-        //     environment {
-        //         ANSIBLE_HOST_KEY_CHECKING = "False"
-        //     }
-        //     options { skipDefaultCheckout() }
-        //     steps {
-        //         dir('ansible'){
-        //             sshagent (credentials: ['debian-private-key']){
-        //                 sh 'env | sort'
+                    def pom = readMavenPom file: 'pom.xml'
+                    println pom
 
-        //                 // ---  community.general.jboss
-        //                 sh 'pip install --upgrade ansible'
-        //                 sh 'ansible --version'
-        //                 sh 'ansible-galaxy --version'
-        //                 sh 'ansible-galaxy collection install community.general'
-        //                 // ---
+                    def server = Artifactory.server 'artifactory'
+                    def repository = pom.artifactId
+
+                    if("${GIT_BRANCH}" == 'origin/master'){
+                        repository = repository + '-release'
+                    } else {
+                        repository = repository + '-snapshot'
+                    }
+
+                    def uploadSpec = """
+                        {
+                            "files": [
+                                {
+                                    "pattern": "target/.*.war",
+                                    "target": "${repository}/${pom.groupId}/${pom.artifactId}/${pom.version}/",
+                                    "regexp": "true"
+                                }
+                            ]
+                        }
+                    """
+                    server.upload spec: uploadSpec
+                }
+            }
+        }
+        stage('Deploy with Ansible') {
+            agent {
+                docker {
+                    image 'quay.io/ansible/ansible-runner:stable-2.12-latest'
+                    args '-u root'
+                }
+            }
+            environment {
+                ANSIBLE_HOST_KEY_CHECKING = "False"
+            }
+            options { skipDefaultCheckout() }
+            steps {
+                dir('ansible'){
+                    sshagent (credentials: ['debian-private-key']){
+                        sh 'env | sort'
+
+                        // ---  community.general.jboss
+                        sh 'pip install --upgrade ansible'
+                        sh 'ansible --version'
+                        sh 'ansible-galaxy --version'
+                        sh 'ansible-galaxy collection install community.general'
+                        // ---
                        
-        //                 sh 'ansible-playbook -i hosts deploy_jboss.yml'
-        //             }
-        //         }
-        //     }
-        // }
+                        sh 'ansible-playbook -i hosts deploy_jboss.yml'
+                    }
+                }
+            }
+        }
     }
     post {
         success {
