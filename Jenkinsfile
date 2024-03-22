@@ -3,9 +3,6 @@ pipeline {
     tools {
         maven 'maven3.8.5'
     }
-    environment {
-        JBOSS_CREDENTIALS = credentials('jboss-credentials')
-    }
     stages {
         stage('Build') {                      
             steps {
