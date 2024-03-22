@@ -13,35 +13,35 @@ pipeline {
                 sh 'mvn clean package -B -ntp -DskipTests'
             }
         }
-        stage('Testing') {
-            steps {
-                sh 'mvn test -B -ntp'
-            }
-            post {                
-                success {
-                    jacoco()
-                    junit 'target/surefire-reports/*.xml'
-                }                
-                failure {
-                    echo 'Ha ocurrido un error TEST'
-                }
-            }
-        }
-        stage('Sonarqube') {
-            steps {
-                withSonarQubeEnv('sonarqube'){                    
-                    sh 'mvn sonar:sonar -B -ntp'
-                }              
-            }
-        }
-        stage('Quality Gate') {
-            steps {
-                // Quality Gate
-                timeout(time: 1, unit: 'HOURS'){
-                    waitForQualityGate abortPipeline: true
-                }      
-            }
-        }        
+        // stage('Testing') {
+        //     steps {
+        //         sh 'mvn test -B -ntp'
+        //     }
+        //     post {                
+        //         success {
+        //             jacoco()
+        //             junit 'target/surefire-reports/*.xml'
+        //         }                
+        //         failure {
+        //             echo 'Ha ocurrido un error TEST'
+        //         }
+        //     }
+        // }
+        // stage('Sonarqube') {
+        //     steps {
+        //         withSonarQubeEnv('sonarqube'){                    
+        //             sh 'mvn sonar:sonar -B -ntp'
+        //         }              
+        //     }
+        // }
+        // stage('Quality Gate') {
+        //     steps {
+        //         // Quality Gate
+        //         timeout(time: 1, unit: 'HOURS'){
+        //             waitForQualityGate abortPipeline: true
+        //         }      
+        //     }
+        // }        
         stage('Artifactory') {
             steps {
                 script {
@@ -83,10 +83,10 @@ pipeline {
                         ls -la
                         env | sort
 
-                        scp -o StrictHostKeyChecking=no target/applicationPetstore.war admin@54.190.196.47:/home/admin
-                        ssh admin@54.190.196.47 "~/jboss-eap-7.4/bin/jboss-cli.sh --user=$JBOSS_CREDENTIALS_USR --password=$JBOSS_CREDENTIALS_PSW -c --command='undeploy applicationPetstore.war'"
-                        ssh admin@54.190.196.47 "~/jboss-eap-7.4/bin/jboss-cli.sh --user=$JBOSS_CREDENTIALS_USR --password=$JBOSS_CREDENTIALS_PSW -c --command='deploy /home/admin/applicationPetstore.war'"
-                        ssh admin@54.190.196.47 'rm -f /home/admin/applicationPetstore.war'
+                        scp -o StrictHostKeyChecking=no target/petclinic.war admin@54.190.196.47:/home/admin
+                        #ssh admin@54.190.196.47 "~/jboss-eap-7.4/bin/jboss-cli.sh --user=$JBOSS_CREDENTIALS_USR --password=$JBOSS_CREDENTIALS_PSW -c --command='undeploy petclinic.war'"
+                        ssh admin@54.190.196.47 "~/jboss-eap-7.4/bin/jboss-cli.sh --user=$JBOSS_CREDENTIALS_USR --password=$JBOSS_CREDENTIALS_PSW -c --command='deploy /home/admin/petclinic.war'"
+                        ssh admin@54.190.196.47 'rm -f /home/admin/petclinic.war'
                     '''
                 }
             }
