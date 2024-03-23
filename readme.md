@@ -11,7 +11,7 @@ El pipeline se encuentra en el job __spring-framework-petclinic__
     ![sonarqube](./screenshots/sonarqube.png)    
 
 - __Artifactory__
-    - Los artefactos están almacenados en un repositorio Jfrog, accesible a través de https://hub.docker.com/r/jhonpridedev/spring-boot-rest-api/tags
+    - Los artefactos están almacenados en un repositorio Jfrog, accesible a través de http://54.191.82.56:8082/ui/repos/tree/General/spring-framework-petclinic-release
     ![dockerhub](./screenshots/artifactory.png)    
 
 - __Deploy Jobss (Ansible)__
